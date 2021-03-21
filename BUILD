@@ -9,11 +9,13 @@ load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_extract")
 
 container_run_and_extract(
     name = "counter_strike_global_offensive",
-    extract_file = "/temp.file",
+    extract_file = "/tarball.tar.xz",
     commands = [
         "/opt/steam/steamcmd.sh +login anonymous +force_install_dir /opt/game +app_update 740 validate +quit",
         "rm -rf /opt/game/steamapps",
-        "touch temp.file"
+        "apt-get update",
+        "apt-get install xz-utils",
+        "tar --remove-files -Jcvf /tarball.tar.xz opt/game/",
     ],
     image = "@steamcmd_base//image",
 )
