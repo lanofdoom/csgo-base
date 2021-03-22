@@ -20,4 +20,4 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Build and push image
-        run: bazel run :push_server_image
+        run: bazel build :push_server_image
