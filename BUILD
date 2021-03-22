@@ -9,13 +9,11 @@ load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_extract")
 
 container_run_and_extract(
     name = "counter_strike_global_offensive",
-    extract_file = "/tarball.tar.xz",
+    extract_file = "/tarball.tar.gz",
     commands = [
         "/opt/steam/steamcmd.sh +login anonymous +force_install_dir /opt/game +app_update 740 validate +quit",
         "rm -rf /opt/game/steamapps",
-        "apt-get update",
-        "apt-get install xz-utils",
-        "XZ_OPT='-T0 -1' tar --remove-files -cvJf /tarball.tar.xz opt/game/",
+        "tar --remove-files -czvf /tarball.tar.gz opt/game/",
     ],
     image = "@steamcmd_base//image",
 )
@@ -72,7 +70,7 @@ container_image(
     entrypoint = ["/opt/game/srcds_run", "-game csgo", "-tickrate 128", "+map de_dust2", "-strictbindport"],
     base = "server_base.tar",
     tars = [
-        ":counter_strike_global_offensive/tarball.tar.xz",
+        ":counter_strike_global_offensive/tarball.tar.gz",
     ],
 )
 
