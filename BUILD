@@ -1,25 +1,7 @@
 load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
 load("@io_bazel_rules_docker//docker/package_managers:download_pkgs.bzl", "download_pkgs")
 load("@io_bazel_rules_docker//docker/package_managers:install_pkgs.bzl", "install_pkgs")
-load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit", "container_run_and_extract")
-
-#
-# Download Counter-Strike: Global Offensive
-#
-
-container_run_and_extract(
-    name = "counter_strike_global_offensive",
-    extract_file = "/tarball.tar.zst",
-    commands = [
-        "/opt/steam/steamcmd.sh +login anonymous +force_install_dir /opt/game +app_update 740 validate +quit",
-        "rm -rf /opt/game/steamapps",
-        "chown -R nobody:root /opt",
-        "apt-get update",
-        "apt-get install zstd",
-        "tar --remove-files --use-compress-program=zstd --mtime='1970-01-01' -cvf /tarball.tar.zst opt/game/",
-    ],
-    image = "@steamcmd_base//image",
-)
+load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit_layer", "container_run_and_extract")
 
 #
 # Build Image With i386 Enabled
@@ -27,7 +9,7 @@ container_run_and_extract(
 
 container_run_and_extract(
     name = "enable_i386_sources",
-    image = "@ubuntu//image",
+    image = "@steamcmd_base//image",
     extract_file = "/var/lib/dpkg/arch",
     commands = [
         "dpkg --add-architecture i386",
@@ -35,8 +17,8 @@ container_run_and_extract(
 )
 
 container_image(
-    name = "ubuntu_with_i386_packages",
-    base = "@ubuntu//image",
+    name = "steamcmd_with_i386_packages",
+    base = "@steamcmd_base//image",
     directory = "/var/lib/dpkg",
     files = [
         ":enable_i386_sources/var/lib/dpkg/arch",
@@ -44,12 +26,12 @@ container_image(
 )
 
 #
-# Server Image
+# Install deps
 #
 
 download_pkgs(
     name = "server_deps",
-    image_tar = ":ubuntu_with_i386_packages.tar",
+    image_tar = ":steamcmd_with_i386_packages.tar",
     packages = [
         "lib32gcc1",
         "zstd",
@@ -61,28 +43,46 @@ download_pkgs(
 )
 
 install_pkgs(
-    name = "server_with_deps",
-    image_tar = ":ubuntu_with_i386_packages.tar",
+    name = "server_base",
+    image_tar = ":steamcmd_with_i386_packages.tar",
     installables_tar = ":server_deps.tar",
     installation_cleanup_commands = "rm -rf /var/lib/apt/lists/*",
-    output_image_name = "server_with_deps",
+    output_image_name = "server_base",
 )
 
-container_run_and_commit(
-    name = "server_base",
-    image = ":server_with_deps.tar",
+#
+# Download Counter-Strike: Global Offensive
+#
+
+container_run_and_commit_layer(
+    name = "counter_strike_global_offensive",
     commands = [
-        "chown -R nobody:root /opt",
+        "/opt/steam/steamcmd.sh +login anonymous +force_install_dir /opt/game +app_update 740 validate +quit",
+        "rm /opt/steam/package/steam_cmd_linux.installed",
+        "rm -rf /opt/game/steamapps",
+        "chown -R nobody:root /opt/game",
+        "tar --remove-files --use-compress-program=zstd --mtime='1970-01-01' -cvf /csgo.tar.zst opt/game/",
+        "rm -rf /opt/game",
+        "rm -rf /root/Steam",
+        "rm -rf /root/.steam",
+        "rmdir /tmp/dumps",
     ],
+    image = ":server_base.tar",
 )
+
+#
+# Server Image
+#
 
 container_image(
     name = "server_image",
     user = "nobody",
     entrypoint = ["/entrypoint.sh"],
     base = ":server_base",
+    layers = [
+        ":counter_strike_global_offensive",
+    ],
     files = [
-        ":counter_strike_global_offensive/tarball.tar.zst",
         "entrypoint.sh",
     ],
 )
