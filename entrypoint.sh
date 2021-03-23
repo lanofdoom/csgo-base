@@ -1,6 +1,9 @@
 #!/bin/bash -ue
 
 while [ true ]; do
+    # Update Packages
+    apt-get update && apt-get upgrade -y
+
     # Start Server
     /update_server.sh
     sudo -u nobody /customize_server.sh
@@ -12,8 +15,7 @@ while [ true ]; do
     timeout_seconds=$(echo "$target_epoch - $current_epoch" | bc)
     sleep $timeout_seconds
 
-    # Update packages and kill server
-    apt-get update && apt-get upgrade -y
+    # Kill Server
     pkill srcds_run
     pkill srcds_linux
 done
