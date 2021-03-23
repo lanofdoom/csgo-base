@@ -2,7 +2,7 @@
 
 if [ ! -d /opt/game/csgo ]
 then
-    tar -xvf csgo.tar.zst
+    tar --use-compress-program=zstd -xvf csgo.tar.zst
 fi
 
 /opt/game/srcds_run
