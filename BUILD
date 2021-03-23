@@ -12,6 +12,7 @@ download_pkgs(
     image_tar = "@steamcmd_base//image",
     packages = [
         "bc",
+        "screen",
         "sudo",
     ],
 )
