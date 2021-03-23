@@ -19,4 +19,4 @@ jobs:
         run: echo "$CR_PAT" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build base image
-        run: bazel run :server_image
+        run: bazel run :push_server_image
