@@ -19,5 +19,8 @@ jobs:
 
       - uses: actions/checkout@v2
 
-      - name: Build and push image
+      - name: Build base image
         run: bazel run :server_image
+
+      - name: Build server image
+        run: sudo docker build .
