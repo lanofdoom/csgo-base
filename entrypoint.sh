@@ -6,7 +6,7 @@ while [ true ]; do
 
     # Start Server
     /update_server.sh
-    sudo -E -u nobody /customize_server.sh
+    /customize_server.sh
     screen -A -m -d -S css-server sudo -E -u nobody /run_server.sh
 
     # Wait until maintenance hour
