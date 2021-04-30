@@ -27,7 +27,7 @@ install_pkgs(
 
 container_image(
     name = "server_image",
-    base = ":server_base",
+    base = "server_base.tar",
     entrypoint = ["/entrypoint.sh"],
     env = {
         "TZ": "America/Chicago",
